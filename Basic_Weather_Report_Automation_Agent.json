@@ -1,0 +1,152 @@
+{
+  "name": "Weather Report Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -60
+      ],
+      "id": "d8852aa1-94c8-42ca-96f4-f34cdf071d65",
+      "name": "manual test"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        160
+      ],
+      "id": "b11881bd-44d5-4bf1-881a-3599b0695c8e",
+      "name": "6 am Schedule"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=25.5&longitude=69.01&hourly=temperature_2m&current=rain&forecast_days=3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        20
+      ],
+      "id": "250fc5c2-77fa-4870-a1a8-1d1fce8960c4",
+      "name": "get wheather"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Input: items[0]['json'] contains the weather data\nweather_data = items[0][\"json\"]\n\n# Access the hourly temperatures\nhourly_temperatures = weather_data[\"hourly\"][\"temperature_2m\"]\n\n# Calculate high and low temperatures for the day\nhigh_temperature = max(hourly_temperatures[:24])  # First 24 hours = one day\nlow_temperature = min(hourly_temperatures[:24])\n\n# Create the message\nmessage = f\"In Mirpurkhas, the high temperature is {high_temperature}°C and low temperature is {low_temperature}°C.\"\n\n# Output as n8n item\nreturn [{\n    \"json\": {\n        \"message\": message\n    }\n}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        20
+      ],
+      "id": "2ce27e37-bc4a-4fd7-b7a0-9b0ff9e5f320",
+      "name": "create mesage"
+    },
+    {
+      "parameters": {
+        "sendTo": "crajnesh60@gmail.com",
+        "subject": "Today's Weather Report",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        580,
+        20
+      ],
+      "id": "a8df4a70-fae3-449d-bcc9-31c8d6e9e4a7",
+      "name": "Gmail",
+      "webhookId": "ebd9d231-ad5c-432a-a417-74d74d5ee6cc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LvFPdis16wBVKrSI",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "6 am Schedule": {
+      "main": [
+        [
+          {
+            "node": "get wheather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "manual test": {
+      "main": [
+        [
+          {
+            "node": "get wheather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get wheather": {
+      "main": [
+        [
+          {
+            "node": "create mesage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create mesage": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "75f04dd8-7f72-43f9-96e3-82d6676a3625",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "08f3798649724916365438da1e233b17b6752eb29ff01f1521428115659e0fcf"
+  },
+  "id": "Tjx6LNzihCWhRAhx",
+  "tags": []
+}
